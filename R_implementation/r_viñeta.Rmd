@@ -1,0 +1,1199 @@
+---
+title: "r_viñeta"
+author: "Erik Aranburu"
+date: "2024-11-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Implementación de Funciones para Software Matemático y Estadístico
+
+## Introducción
+
+Este proyecto tiene como objetivo desarrollar una serie de funciones en R para el análisis y procesamiento de datos, siguiendo las especificaciones detalladas en el enunciado de Egela. Las funciones implementadas cubren técnicas de discretización, cálculo de métricas, normalización, filtrado de variables y visualización, y están diseñadas para operar sin el uso de bibliotecas externas que ya realicen estas tareas.
+
+La implementación se ha organizado en 7 archivos de código, cada uno con funciones específicas para cada tarea concreta. Para verificar la funcionalidad de estas implementaciones, se han creado 7 archivos de pruebas unitarias (uno para cada módulo), los cuales prueban el comportamiento de cada función en distintos casos y aseguran que operen correctamente bajo diferentes escenarios de entrada.
+
+A continuación, se describe brevemente cada archivo de código y su correspondiente archivo de pruebas.
+
+## Implementaciones
+
+1.  **dataframe.R**: Gestiona operaciones y transformaciones básicas en el dataset para asegurar su formato correcto y adecuado para análisis.
+
+2.  **discretize.R**: Implementa algoritmos de discretización para atributos individuales y datasets completos, incluyendo métodos de igual frecuencia e igual anchura.
+
+3.  **metrics.R**: Incluye funciones para calcular métricas de atributos, como la varianza, el AUC para variables continuas, y la entropía para variables discretas.
+
+4.  **normalize.R**: Implementa métodos de normalización y estandarización de variables, aplicables tanto a atributos individuales como al dataset completo.
+
+5.  **filter.R**: Permite filtrar variables del dataset basándose en métricas calculadas, como entropía o varianza, de acuerdo a umbrales especificados.
+
+6.  **correlation.R**: Contiene funciones para calcular la correlación entre variables en un dataset. Si las variables son categóricas, calcula la información mutua.
+
+7.  **visualization.R**: Contiene funciones de visualización, especialmente útiles para representar el AUC y las matrices de correlación o información mutua.
+
+## Tests Implementados
+
+Los tests unitarios han sido diseñados para validar el correcto funcionamiento de cada archivo. Cada test asegura que las funciones en los archivos correspondientes operen según lo esperado con diferentes entradas y escenarios.
+
+-   **correlation_test.R**: Valida el cálculo de correlación y de información mutua entre variables.
+-   **dataframe_test.R**: Verifica la correcta gestión y transformación del dataset.
+-   **discretize_test.R**: Prueba los algoritmos de discretización para asegurar que dividan los datos correctamente según los métodos de igual frecuencia e igual anchura.
+-   **filter_test.R**: Testea el filtrado de variables basado en métricas como la entropía y la varianza.
+-   **metrics_test.R**: Comprueba el cálculo de métricas, incluyendo varianza, AUC y entropía.
+-   **normalize_test.R**: Asegura que las funciones de normalización y estandarización operen de manera adecuada tanto para variables individuales como para el dataset completo.
+-   **visualization_test.R**: Valida las funciones de visualización, incluyendo gráficos de AUC y matrices de correlación/información mutua.
+
+## Funciones Adicionales Implementadas
+
+Como mejoras a las funcionalidades del proyecto original, se han añadido las siguientes capacidades adicionales en el análisis de datos:
+
+1.  **Diseño de objetos para la gestión de datasets y funciones de lectura y escritura**\
+    Se ha implementado un diseño orientado a objetos (utilizando S3 o S4) para gestionar los datasets de manera estructurada, mediante la creación de una clase denominada `DataFrame` en el archivo `dataframe.R`. Esto facilita la manipulación de datos, permitiendo manejo estandarizado a las operaciones de entrada y salida.
+
+2.  **Nuevos métodos de discretización**\
+    Se han incorporado dos métodos adicionales de discretización, basados en k-means y cuantiles, que se añaden a los métodos tradicionales de igual frecuencia y igual anchura.
+
+3.  **Ampliación de opciones de visualización**\
+    Se han desarrollado nuevas funciones de visualización, incluyendo diagramas de cajas para características (estandarizables o no) y un histograma de entropía por variables. Estas visualizaciones adicionales facilitan el análisis de la distribución y variabilidad de los datos y permiten observar la entropía asociada a cada variable de forma gráfica.
+
+4.  **Lectura y escritura de datasets en múltiples formatos**\
+    Se ha habilitado la lectura y escritura de datasets en diferentes (CSV, TXT) y se ha agregado soporte para un formato propio. Esto aumenta la flexibilidad en el intercambio y almacenamiento de datos.
+
+## 1.DataFrame
+
+### Enunciado
+
+Clase para la manipulación y gestión de un `data.frame` personalizado, que permite añadir y acceder a columnas, verificar si está vacío y exportar o importar datos en formato CSV y TXT.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `DataFrame <- function(datos)`
+
+**Descripción:** Constructor para inicializar el `data.frame` personalizado.
+
+**Definición:**
+
+``` r
+#' Clase para manipular un data.frame personalizado con métodos para añadir y acceder columnas,
+#' validar si está vacío, y exportar o importar datos en formatos CSV y TXT.
+#'
+#' @docType class
+#' @name DataFrame
+#' @export
+DataFrame <- function(datos)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df <- DataFrame(list(col1 = c(1, 2, 3), col2 = c(4, 5, 6)))
+```
+
+##### `obtener_columna <- function(object, nombre_columna)`
+
+**Descripción:** Obtiene los valores de una columna específica.
+
+**Definición:**
+
+``` r
+#' Método para obtener los valores de una columna específica.
+#'
+#' @param object Instancia del data.frame personalizado.
+#' @param nombre_columna Nombre de la columna a obtener.
+#' @return Lista de valores de la columna solicitada.
+#' @examples
+#' obtener_columna(df, "col1")
+obtener_columna <- function(object, nombre_columna)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df <- DataFrame(list(col1 = c(1, 2, 3), col2 = c(4, 5, 6)))
+col <- obtener_columna(df, "col1")
+```
+
+##### `esta_vacio <- function(object)`
+
+**Descripción:** Verifica si el data.frame está vacío.
+
+**Definición:**
+
+``` r
+#' Método para verificar si el data.frame está vacío.
+#'
+#' @param object Instancia del data.frame personalizado.
+#' @return TRUE si no hay datos o todas las columnas están vacías, FALSE en caso contrario.
+#' @examples
+#' esta_vacio(df)
+esta_vacio <- function(object)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df_vacio <- DataFrame(list())
+df_no_vacio <- DataFrame(list(col1 = numeric(0)))
+df_llenado <- DataFrame(list(col1 = c(1)))
+
+esta_vacio(df_vacio)
+esta_vacio(df_llenado)
+```
+
+##### `agregar_columna <- function(object, nombre_columna, valores)`
+
+**Descripción:** Añade una nueva columna al data.frame.
+
+**Definición:**
+
+``` r
+#' Método para añadir una columna al data.frame.
+#'
+#' @param object Instancia del data.frame personalizado.
+#' @param nombre_columna Nombre de la nueva columna.
+#' @param valores Lista de valores para la columna.
+#' @return El data.frame actualizado.
+#' @examples
+#' df <- DataFrame(list(col1 = c(1, 2, 3)))
+#' df <- agregar_columna(df, "nueva_columna", c(4, 5, 6))
+agregar_columna <- function(object, nombre_columna, valores)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df <- DataFrame(list(col1 = c(1, 2, 3)))
+df <- agregar_columna(df, "col2", c(4, 5, 6))
+print(df)
+```
+
+##### `escribir_a_csv <- function(object, ruta_archivo)`
+
+**Descripción:** Carga un data.frame desde un archivo CSV.
+
+**Definición:**
+
+``` r
+#' Método para escribir el data.frame en un archivo CSV.
+#'
+#' @param object Instancia del data.frame personalizado.
+#' @param ruta_archivo Ruta donde se guardará el archivo CSV.
+#' @return None
+#' @examples
+#' escribir_a_csv(df, "datos.csv")
+escribir_a_csv <- function(object, ruta_archivo)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df <- DataFrame(list(
+  col1 = c(1, 2, 3),
+  col2 = c(4.5, 5.5, 6.5),
+  col3 = c("a", "b", "c")
+))
+escribir_a_csv(df, "prueba.csv")
+```
+
+##### `escribir_a_txt <- function(object, ruta_archivo)`
+
+**Descripción:** Guarda el data.frame en un archivo txt.
+
+**Definición:**
+
+``` r
+#' Método para escribir el data.frame en un archivo TXT con valores separados por tabulaciones.
+#'
+#' @param object Instancia del data.frame personalizado.
+#' @param ruta_archivo Ruta donde se guardará el archivo TXT.
+#' @return None
+#' @examples
+#' escribir_a_txt(df, "datos.txt")
+escribir_a_txt <- function(object, ruta_archivo) 
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df <- DataFrame(list(
+  col1 = c(1, 2, 3),
+  col2 = c(4.5, 5.5, 6.5),
+  col3 = c("a", "b", "c")
+))
+escribir_a_txt(df, "prueba.txt")
+```
+
+##### `leer_desde_csv <- function(ruta_archivo)`
+
+**Descripción:** Carga un data.frame desde un archivo CSV.
+
+**Definición:**
+
+``` r
+#' Método de clase para leer un archivo CSV y crear un data.frame personalizado.
+#'
+#' @param ruta_archivo Ruta del archivo CSV a leer.
+#' @return Nueva instancia de la clase con datos cargados desde el CSV.
+#' @examples
+#' df <- leer_desde_csv("datos.csv")
+leer_desde_csv <- function(ruta_archivo)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df_cargado <- leer_desde_csv("prueba.csv")
+print(df_cargado)
+```
+
+##### `leer_desde_txt <- function(ruta_archivo)`
+
+**Descripción:** Carga un data.frame desde un archivo TXT.
+
+**Definición:**
+
+``` r
+#' Método de clase para leer un archivo TXT con valores separados por tabulaciones y crear un data.frame personalizado.
+#'
+#' @param ruta_archivo Ruta del archivo TXT a leer.
+#' @return Nueva instancia de la clase con datos cargados desde el TXT.
+#' @examples
+#' df <- leer_desde_txt("datos.txt")
+leer_desde_txt <- function(ruta_archivo) 
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+df_cargado <- leer_desde_txt("prueba.txt")
+print(df_cargado)
+```
+
+## 2.Discretizador
+
+### Enunciado
+
+Clase que implementa varios métodos de discretización para una columna de datos numéricos, incluyendo discretización por ancho igual, frecuencia igual, k-means y basada en cuantiles. Además, permite obtener los rangos de cada bin generados en la discretización.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `ancho_igual <- function(discretizador, columna, bins)`
+
+**Descripción:** Discretiza una columna en intervalos de ancho igual.
+
+**Definición:**
+
+``` python
+#' Método para discretizar una columna en intervalos de ancho igual.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param columna (numeric) Lista de valores numéricos a discretizar.
+#' @param bins (int) Número de intervalos (bins).
+#' @return (numeric) Lista de valores discretizados en función del intervalo correspondiente.
+ancho_igual <- function(discretizador, columna, bins)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+columna <- c(1, 2, 3, 4, 5)
+intervalos <- 2
+discretizador <- Discretizador()
+resultado <- ancho_igual(discretizador, columna, intervalos)
+print(resultado)
+```
+
+##### frecuencia_igual \<- function(discretizador, columna, bins)
+
+**Descripción:** Discretiza una columna en intervalos de frecuencia igual.
+
+**Definición:**
+
+``` python
+#' Método para discretizar una columna en intervalos de frecuencia igual.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param columna (numeric) Lista de valores numéricos a discretizar.
+#' @param bins (int) Número de intervalos (bins).
+#' @return (numeric) Lista de valores discretizados en función del intervalo correspondiente.
+frecuencia_igual <- function(discretizador, columna, bins)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+columna <- c(1, 2, 3, 4, 5)
+intervalos <- 2
+discretizador <- Discretizador()
+resultado <- frecuencia_igual(discretizador, columna, intervalos)
+print(resultado)
+```
+
+##### k_means \<- function(discretizador, columna, bins)
+
+**Descripción:** Discretiza una columna utilizando el algoritmo de k-means.
+
+**Definición:**
+
+``` python
+#' Método para discretizar una columna usando el algoritmo de k-means.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param columna (numeric) Lista de valores numéricos a discretizar.
+#' @param bins (int) Número de intervalos (bins).
+#' @return (numeric) Lista de valores discretizados en función del intervalo correspondiente.
+k_means <- function(discretizador, columna, bins)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+columna <- c(10, 20, 20, 30, 40, 40, 50, 60)
+intervalos <- 3
+discretizador <- Discretizador()
+resultado <- k_means(discretizador, columna, intervalos)
+print(resultado)
+```
+
+##### basado_en_cuantiles \<- function(discretizador, columna, bins)
+
+**Descripción:** Discretiza una columna basada en cuantiles.
+
+**Definición:**
+
+``` python
+#' Método para discretizar una columna basada en cuantiles.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param columna (numeric) Lista de valores numéricos a discretizar.
+#' @param bins (int) Número de intervalos (bins).
+#' @return (numeric) Lista de valores discretizados en función del intervalo correspondiente.
+basado_en_cuantiles <- function(discretizador, columna, bins)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+columna <- c(5, 15, 25, 35, 45, 55, 65, 75, 85)
+intervalos <- 3
+discretizador <- Discretizador()
+resultado <- basado_en_cuantiles(discretizador, columna, intervalos)
+print(resultado)
+```
+
+##### discretizar_columna \<- function(discretizador, df, nombre_columna, metodo = "ancho_igual", bins = 3)
+
+**Descripción:** Discretiza una columna de un data.frame usando un método específico.
+
+**Definición:**
+
+``` python
+#' Método para discretizar una columna de un data.frame usando un método específico.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param df (data.frame) DataFrame con la columna a discretizar.
+#' @param nombre_columna (str) Nombre de la columna a discretizar.
+#' @param metodo (str) Método de discretización ('ancho_igual', 'frecuencia_igual', 'k_means', 'basado_en_cuantiles').
+#' @param bins (int) Número de intervalos (bins).
+#' @return (data.frame) El data.frame con la columna discretizada.
+discretizar_columna <- function(discretizador, df, nombre_columna, metodo = "ancho_igual", bins = 3)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+df <- DataFrame(list(col = c(10, 20, 20, 30, 40, 40, 50, 60)))
+discretizador <- Discretizador()
+df <- discretizar_columna(discretizador, df, "col", metodo = "k_means", bins = 3)
+resultado <- obtener_columna(df, "col")
+print(resultado)
+
+df <- DataFrame(list(col = c(5, 15, 25, 35, 45, 55, 65, 75, 85)))
+discretizador <- Discretizador()
+df <- discretizar_columna(discretizador, df, "col", metodo = "basado_en_cuantiles", bins = 3)
+resultado <- obtener_columna(df, "col")
+print(resultado)
+
+#... lo mismo para otros metodos
+```
+
+##### obtener_rangos_bins \<- function(discretizador, metodo = "ancho_igual", decimales = 8)
+
+**Descripción:** Obtiene los rangos de cada bin en función del método de discretización usado.
+
+**Definición:**
+
+``` python
+#' Método para obtener los rangos de cada bin en función del método de discretización usado.
+#'
+#' @param discretizador (Discretizador) Objeto de la clase Discretizador.
+#' @param metodo (str) Método de discretización para el cual obtener los rangos de bins.
+#' @param decimales (int) Número de decimales para redondear los puntos de corte.
+#' @return (list) Lista de tuplas que representan los rangos de cada bin.
+#' @examples
+#' # Ejemplo de uso
+#' discretizador <- Discretizador()
+#' columna <- c(1, 2, 3, 4, 5)
+#' discretizado <- ancho_igual(discretizador, columna, bins = 3)
+#' rangos <- obtener_rangos_bins(discretizador, metodo = "ancho_igual")
+obtener_rangos_bins <- function(discretizador, metodo = "ancho_igual", decimales = 8)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("discretize.R")
+
+columna <- c(10, 20, 20, 30, 40, 40, 50, 60)
+intervalos <- 3
+discretizador <- Discretizador()
+k_means(discretizador, columna, intervalos)
+resultado <- obtener_rangos_bins(discretizador, metodo = "k_means")
+print(resultado)
+
+columna <- c(5, 15, 25, 35, 45, 55, 65, 75, 85)
+intervalos <- 3
+discretizador <- Discretizador()
+basado_en_cuantiles(discretizador, columna, intervalos)
+resultado <- obtener_rangos_bins(discretizador, metodo = "basado_en_cuantiles")
+print(resultado)
+
+#... lo mismo para otros metodos
+```
+
+## 3.Métricas
+
+### Enunciado
+
+Clase que implementa métodos para calcular métricas estadísticas, como varianza, entropía y AUC (Área Bajo la Curva), en una columna de datos. Además, permite calcular automáticamente la métrica adecuada en función del tipo de columna.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `varianza <- function(columna)`
+
+**Descripción:** Calcula la varianza de una columna numérica.
+
+**Definición:**
+
+``` python
+#' Método para calcular la varianza de una columna numérica.
+#'
+#' @param columna (list[float | int]) Lista de valores numéricos.
+#' @return float: Varianza de los valores en la columna.
+varianza <- function(columna)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("metrics.R")
+
+columna <- c(1, 2, 3, 4, 5)
+resultado <- varianza(columna)
+print(resultado)
+```
+
+##### `entropia <- function(columna)`
+
+**Descripción:** Calcula la entropía de una columna categórica.
+
+**Definición:**
+
+``` python
+#' Método para calcular la entropía de una columna categórica.
+#'
+#' @param columna (list) Lista de valores categóricos.
+#' @return float: Entropía de los valores en la columna.
+entropia <- function(columna)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("metrics.R")
+
+columna <- c(1, 1, 2, 2, 2, 3, 3)
+resultado <- entropia(columna)
+print(resultado)
+```
+
+##### `auc <- function(columna, columna_clase)`
+
+**Descripción:** Calcula el AUC (Área Bajo la Curva) de una columna numérica en relación con una columna de clase binaria.
+
+**Definición:**
+
+``` python
+#' Método para calcular el AUC (Área Bajo la Curva) de una columna en función de una columna de clase binaria.
+#'
+#' @param columna (list[float | int]) Lista de valores numéricos para ordenar.
+#' @param columna_clase (list[int]) Lista binaria de clases asociadas a cada valor en columna.
+#' @return float: Valor de AUC calculado para la columna y columna_clase.
+auc <- function(columna, columna_clase)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("metrics.R")
+
+columna <- c(0.1, 0.4, 0.35, 0.8)
+columna_clase <- c(0, 1, 0, 1)
+resultado <- auc(columna, columna_clase)
+print(resultado)
+```
+
+##### `calcular_metrica <- function(df, nombre_columna, nombre_columna_clase = NULL)`
+
+**Descripción:** Calcula la métrica adecuada para una columna de un DataFrame, basándose en el tipo de datos de la columna.
+
+**Definición:**
+
+``` python
+#' Método para calcular una métrica para una columna en un data.frame.
+#'
+#' @param df (DataFramePersonalizado) DataFrame con los datos.
+#' @param nombre_columna (str) Nombre de la columna para la cual calcular la métrica.
+#' @param nombre_columna_clase (str, opcional) Nombre de la columna de clase si es necesaria para el cálculo.
+#' @return dict: Diccionario con la métrica calculada.
+calcular_metrica <- function(df, nombre_columna, nombre_columna_clase = NULL)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("metrics.R")
+
+df <- DataFrame(list(edad = c(20, 25, 30, 35, 40)))
+resultado <- calcular_metrica(df, "edad")
+print(resultado)
+
+df <- DataFrame(list(compra = c(1, 1, 0, 0, 1)))
+resultado <- calcular_metrica(df, "compra")
+print(resultado)
+
+df <- DataFrame(list(
+  ingreso = c(30000, 40000, 50000, 60000),
+  compra = c(0, 1, 0, 1)
+))
+resultado <- calcular_metrica(df, "ingreso", "compra")
+print(resultado)
+
+df <- DataFrame(list(categoria = c('A', 'B', 'A', 'B', 'C')))
+resultado <- calcular_metrica(df, "categoria")
+print(resultado)
+```
+
+## 4.Escalador/Normalizador de Datos
+
+### Enunciado
+
+Clase que proporciona métodos para verificar si una columna es numérica, normalizar valores numéricos con la escala min-max, estandarizar valores, y aplicar estas operaciones en un DataFrame completo.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `normalizar_min_max <- function(columna, decimales = 3)`
+
+**Descripción:** Normaliza una columna utilizando la escala min-max.
+
+**Definición:**
+
+``` python
+#' Método para normalizar una columna utilizando la escala min-max.
+#'
+#' @param columna (list[float | int]) Lista de valores numéricos a normalizar.
+#' @param decimales (int) Número de decimales para redondear los valores normalizados.
+#' @return list[float] Lista de valores normalizados con la escala min-max.
+normalizar_min_max <- function(columna, decimales = 3)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("normalize.R")
+
+columna <- c(10, 20, 30, 40, 50)
+resultado <- normalizar_min_max(columna)
+print(resultado)
+```
+
+##### `estandarizar <- function(columna, decimales = 3)`
+
+**Descripción:** Estandariza una columna restando la media y dividiendo por la desviación estándar.
+
+**Definición:**
+
+``` python
+#' Método para estandarizar una columna, restando la media y dividiendo por la desviación estándar.
+#'
+#' @param columna (list[float | int]) Lista de valores numéricos a estandarizar.
+#' @param decimales (int) Número de decimales para redondear los valores estandarizados.
+#' @return list[float] Lista de valores estandarizados.
+estandarizar <- function(columna, decimales = 3)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("normalize.R")
+
+columna <- c(10, 20, 30, 40, 50)
+resultado <- estandarizar(columna)
+print(resultado)
+```
+
+##### `normalizar_data_frame <- function(df, decimales = 3)`
+
+**Descripción:** Normaliza cada columna numérica de un DataFrame usando la escala min-max.
+
+**Definición:**
+
+``` python
+#' Método para normalizar cada columna numérica de un data.frame usando la escala min-max.
+#'
+#' @param df (objeto) DataFrame personalizado con los datos a normalizar.
+#' @param decimales (int) Número de decimales para redondear los valores normalizados.
+#' @return None
+normalizar_data_frame <- function(df, decimales = 3) 
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  edad = c(25, 30, 35, 40, 45),
+  ingreso = c(30000, 50000, 70000, 100000, 120000),
+  categoria = c("A", "B", "A", "B", "C")
+))
+df <- normalizar_data_frame(df)
+print(df)
+```
+
+##### `estandarizar_data_frame <- function(df, decimales = 3)`
+
+**Descripción:** Estandariza cada columna numérica de un DataFrame, restando la media y dividiendo por la desviación estándar.
+
+**Definición:**
+
+``` python
+#' Método para estandarizar cada columna numérica de un data.frame, restando la media y dividiendo por la desviación estándar.
+#'
+#' @param df (objeto) DataFrame personalizado con los datos a estandarizar.
+#' @param decimales (int) Número de decimales para redondear los valores estandarizados.
+#' @return None
+estandarizar_data_frame <- function(df, decimales = 3)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  edad = c(25, 30, 35, 40, 45),
+  ingreso = c(30000, 50000, 70000, 100000, 120000),
+  categoria = c("A", "B", "A", "B", "C")
+))
+df <- estandarizar_data_frame(df)
+print(df)
+```
+
+## 5.Filtro de Datos
+
+### Enunciado
+
+Clase que permite aplicar filtros a un DataFrame en función de métricas como entropía, varianza y AUC (Área Bajo la Curva) en relación a una columna de clase binaria. Cada filtro selecciona columnas que cumplen con un umbral especificado, almacenando los resultados filtrados. Todos los filtros se aplican sobre el DataFrame original. Una vez se hayan realizado todos los filtros se puede obtener el DataFrame modificado mediante todos los filtrados.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `Filtro <- function(dataframe)`
+
+**Descripción:** Constructor que inicializa el filtro con un DataFrame original.
+
+**Definición:**
+
+``` python
+#' Clase Filtro
+#'
+#' @description
+#' Constructor que inicializa un filtro de datos con el DataFrame original.
+#'
+#' @param dataframe (DataFramePersonalizado) DataFrame con los datos originales.
+#' @return Un objeto de clase Filtro.
+#' @export
+Filtro <- function(dataframe)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("filter.R")
+
+df <- DataFrame(list(
+  'edad' = c(25, 30, 35, 40, 45),
+  'ingreso' = c(30000, 50000, 70000, 100000, 120000),
+  'categoria' = c(1, 1, 2, 2, 3)
+))
+filtro_datos <- Filtro(df)
+```
+
+##### `filtrar_por_entropia <- function(filtro, umbral, columnas = NULL)`
+
+**Descripción:** Filtra columnas en función de la entropía, seleccionando aquellas que superan un umbral dado. De lo contrario la variable/columna quedara descartado. En caso de especificar columna se aplica el filtro colamente a la columna espeficicada (uno o varios, en formato de lista).
+
+**Definición:**
+
+``` python
+#' Método para filtrar columnas en función de la entropía.
+#'
+#' @param filtro El objeto Filtro.
+#' @param umbral (float) Umbral de entropía por encima del cual se filtran las columnas.
+#' @param columnas (list[str] | NULL) Lista de nombres de columnas a filtrar, o NULL para todas las columnas.
+#' @examples
+#' filtrar_por_entropía(filtro, umbral, columnas)
+#' @export
+filtrar_por_entropia <- function(filtro, umbral, columnas = NULL) 
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("filter.R")
+
+df <- DataFrame(list(
+  'edad' = c(25, 30, 35, 40, 45),
+  'ingreso' = c(30000, 50000, 70000, 100000, 120000),
+  'categoria' = c(1, 1, 2, 2, 3)
+))
+filtro_datos <- Filtro(df)
+filtrar_por_entropia(filtro_datos, umbral = 2.3)
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+
+filtro_datos <- Filtro(df)
+filtrar_por_entropia(filtro_datos, umbral = 0.5, columnas = list('categoria'))
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+```
+
+##### `filtrar_por_varianza <- function(filtro, umbral, columnas = NULL)`
+
+**Descripción:** Filtra columnas en función de la varianza, seleccionando aquellas que superan un umbral dado. De lo contrario la variable/columna quedara descartado. En caso de especificar columna se aplica el filtro colamente a la columna espeficicada (uno o varios, en formato de lista).
+
+**Definición:**
+
+``` python
+#' Método para filtrar columnas en función de la varianza.
+#'
+#' @param filtro El objeto Filtro.
+#' @param umbral (float) Umbral de varianza por encima del cual se filtran las columnas.
+#' @param columnas (list[str] | NULL) Lista de nombres de columnas a filtrar, o NULL para todas las columnas.
+#' @examples
+#' filtrar_por_varianza(filtro, umbral, columnas)
+#' @export
+filtrar_por_varianza <- function(filtro, umbral, columnas = NULL)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("filter.R")
+
+df <- DataFrame(list(
+  'edad' = rep(25, 5),
+  'ingreso' = c(30000, 50000, 70000, 100000, 120000),
+  'categoria' = 1:5
+))
+filtro_datos <- Filtro(df)
+filtrar_por_varianza(filtro_datos, umbral = 1000)
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+
+filtro_datos <- Filtro(df)
+filtrar_por_varianza(filtro_datos, umbral = 1.5, columnas = list('categoria'))
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+```
+
+##### `filtrar_por_auc <- function(filtro, umbral, nombre_columna_clase, columnas = NULL)`
+
+**Descripción:** Filtra columnas en función del AUC en relación a una columna de clase binaria, seleccionando aquellas que superan un umbral dado. De lo contrario la variable/columna quedara descartado. En caso de especificar columna se aplica el filtro colamente a la columna espeficicada (uno o varios, en formato de lista).
+
+**Definición:**
+
+``` python
+#' Método para filtrar columnas en función del AUC (Area Under the Curve) en relación a una columna de clase binaria.
+#'
+#' @param filtro El objeto Filtro.
+#' @param umbral (float) Umbral de AUC por encima del cual se filtran las columnas.
+#' @param nombre_columna_clase (str) Nombre de la columna de clase binaria.
+#' @param columnas (list[str] | NULL) Lista de nombres de columnas a filtrar, o NULL para todas las columnas.
+#' @examples
+#' filtrar_por_auc(filtro, umbral, nombre_columna_clase, columnas)
+#' @export
+filtrar_por_auc <- function(filtro, umbral, nombre_columna_clase, columnas = NULL) 
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("filter.R")
+
+df <- DataFrame(list(
+  'edad' = c(23, 45, 31, 22, 35),
+  'ingreso' = c(30000, 50000, 70000, 100000, 120000),
+  'compra' = c(1, 0, 1, 0, 1)
+))
+filtro_datos <- Filtro(df)
+filtrar_por_auc(filtro_datos, umbral = 0.4, nombre_columna_clase = 'compra')
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+
+filtro_datos <- Filtro(df)
+filtrar_por_auc(filtro_datos, umbral = 0.4, nombre_columna_clase = 'compra', columnas = list('edad'))
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+```
+
+##### `obtener_data_frame_filtrado <- function(filtro)`
+
+**Descripción:** Devuelve un nuevo DataFrame que contiene solo las columnas que cumplen con los filtros aplicados.
+
+**Definición:**
+
+``` python
+#' Método para obtener un nuevo DataFrame con los datos filtrados.
+#'
+#' @param filtro El objeto Filtro.
+#' @return DataFramePersonalizado: DataFrame que contiene solo las columnas que cumplen con los filtros aplicados.
+#' @examples
+#' df_filtrado <- obtener_data_frame_filtrado(filtro)
+#' @export
+obtener_data_frame_filtrado <- function(filtro)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("filter.R")
+
+df <- DataFrame(list(
+  'edad' = c(23, 45, 31, 22, 35),
+  'ingreso' = c(30000, 50000, 70000, 100000, 120000),
+  'compra' = c(1, 0, 1, 0, 1)
+))
+filtro_datos <- Filtro(df)
+filtrar_por_auc(filtro_datos, umbral = 0.4, nombre_columna_clase = 'compra')
+df_filtrado <- obtener_data_frame_filtrado(filtro_datos)
+print(df_filtrado)
+```
+
+## 6.Correlación de Datos
+
+### Enunciado
+
+Clase que proporciona métodos para calcular la correlación entre columnas de un DataFrame. Para columnas numéricas, se utiliza la correlación de Pearson, mientras que para columnas categóricas se emplea la información mutua.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `correlacion_pearson <- function(col1, col2)`
+
+**Descripción:** Calcula la correlación de Pearson entre dos columnas numéricas.
+
+**Definición:**
+
+``` python
+#' Método para calcular la correlación de Pearson entre dos columnas numéricas.
+#' 
+#' @param col1 Primera columna de valores numéricos.
+#' @param col2 Segunda columna de valores numéricos.
+#' @return Valor de correlación de Pearson entre col1 y col2.
+correlacion_pearson <- function(col1, col2)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("correlation.R")
+
+df <- DataFrame(list(
+  x = c(1, 2, 3, 4, 5),
+  y = c(2, 4, 6, 8, 10)
+))
+calculadora_correlacion <- Correlacion(df)
+correlaciones <- calcular_correlacion_por_pares(calculadora_correlacion)
+print(correlaciones)
+```
+
+##### `informacion_mutua <- function(col1, col2)`
+
+**Descripción:** Calcula la información mutua entre dos columnas categóricas.
+
+**Definición:**
+
+``` python
+#' Método para calcular la información mutua entre dos columnas categóricas.
+#' 
+#' @param col1 Primera columna de valores.
+#' @param col2 Segunda columna de valores.
+#' @return Valor de información mutua entre col1 y col2.
+informacion_mutua <- function(col1, col2)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("correlation.R")
+
+df <- DataFrame(list(
+  x = c(1, 2, 3, 4, 5),
+  y = c(5, 4, 3, 2, 1)
+))
+calculadora_correlacion <- Correlacion(df)
+correlaciones <- calcular_correlacion_por_pares(calculadora_correlacion)
+print(correlaciones)
+```
+
+##### `calcular_correlacion_por_pares <- function(calculadora)`
+
+**Descripción:** Calcula la correlación entre todas las combinaciones de columnas en el DataFrame. Para columnas numéricas se utiliza la correlación de Pearson, y para columnas categóricas, la información mutua.
+
+**Definición:**
+
+``` python
+#' Método para calcular la correlación entre todas las combinaciones de columnas en el DataFrame.
+#' 
+#' Para columnas numéricas se usa la correlación de Pearson, y para categóricas, la información mutua.
+#' 
+#' @param calculadora Objeto de clase Correlacion.
+#' @return Diccionario con las correlaciones entre pares de columnas.
+#'         Las llaves son tuplas (nombre_col1, nombre_col2) y los valores son los coeficientes de correlación.
+calcular_correlacion_por_pares <- function(calculadora)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("correlation.R")
+
+df <- DataFrame(list(
+  a = c("gato", "perro", "perro", "pájaro", "pájaro"),
+  b = c("manzana", "banana", "banana", "cereza", "cereza")
+))
+calculadora_correlacion <- Correlacion(df)
+correlaciones <- calcular_correlacion_por_pares(calculadora_correlacion)
+print(correlaciones)
+
+df <- DataFrame(list(
+  num = c(10, 20, 30, 40, 50),
+  cat = c(1, 1, 2, 2, 3),
+  otro_num = c(15, 25, 35, 45, 55)
+))
+calculadora_correlacion <- Correlacion(df)
+correlaciones <- calcular_correlacion_por_pares(calculadora_correlacion)
+print(correlaciones)
+```
+
+## 7.Visualizador de Datos
+
+### Enunciado
+
+Clase que proporciona métodos para visualizar datos en un DataFrame. Las visualizaciones incluyen la curva ROC con AUC, matriz de correlación/información mutua, histograma de entropía de variables categóricas y diagramas de caja para características continuas.
+
+### Métodos Implementados
+
+------------------------------------------------------------------------
+
+##### `graficar_auc <- function(visualizador, columna_predictora, columna_clase)`
+
+**Descripción:** Grafica la curva ROC y calcula el AUC para una columna predictora en relación con una columna de clase binaria.
+
+**Definición:**
+
+``` python
+#' Método para graficar la curva ROC y calcular el AUC.
+#'
+#' @param visualizador (VisualizadorDatos) El objeto VisualizadorDatos.
+#' @param columna_predictora (str) Nombre de la columna con los valores del predictor.
+#' @param columna_clase (str) Nombre de la columna con los valores de la clase binaria.
+#' @return None
+#' @export
+graficar_auc <- function(visualizador, columna_predictora, columna_clase)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("visualization.R")
+source("correlation.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  edad = c(23, 45, 31, 22, 35),
+  ingreso = c(30000, 50000, 70000, 100000, 120000),
+  compra = c(1, 0, 1, 0, 1)
+))
+visualizador <- VisualizadorDatos(df)
+graficar_auc(visualizador, "ingreso", "compra")
+```
+
+##### `graficar_matriz_correlacion <- function(visualizador)`
+
+**Descripción:** Grafica de la matriz de correlación o de información mutua entre columnas.
+
+**Definición:**
+
+``` python
+#' Método para graficar la matriz de correlación o de información mutua entre columnas.
+#'
+#' @param visualizador (VisualizadorDatos) El objeto VisualizadorDatos.
+#' @return None
+#' @export
+graficar_matriz_correlacion <- function(visualizador)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("visualization.R")
+source("correlation.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  edad = c(23, 45, 31, 22, 35),
+  ingreso = c(30000, 50000, 70000, 100000, 120000),
+  compra = c(1, 0, 1, 0, 1),
+  categoria = c(1, 1, 2, 2, 3)
+))
+correlacion <- Correlacion(df)
+visualizador <- VisualizadorDatos(df, correlacion)
+graficar_matriz_correlacion(visualizador)
+```
+
+##### `graficar_histograma_entropia <- function(visualizador)`
+
+**Descripción:** Grafica un histograma de entropía de las variables categóricas en el DataFrame.
+
+**Definición:**
+
+``` python
+#' Método para graficar un histograma de entropía de variables categóricas en el DataFrame.
+#'
+#' @param visualizador (VisualizadorDatos) El objeto VisualizadorDatos.
+#' @return None
+#' @export
+graficar_histograma_entropia <- function(visualizador)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("visualization.R")
+source("correlation.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  categoria = c("A", "B", "A", "A", "C"),
+  compra = c(1, 0, 1, 0, 1),
+  color = c("rojo", "azul", "rojo", "verde", "azul")
+))
+visualizador <- VisualizadorDatos(df)
+graficar_histograma_entropia(visualizador)
+```
+
+##### `graficar_diagramas_caja_caracteristicas <- function(visualizador, estandarizado = TRUE)`
+
+**Descripción:** Grafica diagramas de caja de características continuas en el DataFrame, con la opción de estandarizarlas previamente.
+
+**Definición:**
+
+``` python
+#' Método para graficar diagramas de caja de características continuas en el DataFrame.
+#'
+#' @param visualizador (VisualizadorDatos) El objeto VisualizadorDatos.
+#' @param estandarizado (bool) Indica si las características deben ser estandarizadas antes de graficar.
+#' @return None
+#' @export
+graficar_diagramas_caja_caracteristicas <- function(visualizador, estandarizado = TRUE)
+```
+
+**Ejemplo de uso:**
+
+```{r}
+source("dataframe.R")
+source("visualization.R")
+source("correlation.R")
+source("normalize.R")
+
+df <- DataFrame(list(
+  edad = c(23, 45, 31, 22, 35),
+  ingreso = c(30000, 50000, 70000, 100000, 120000),
+  puntaje = c(80, 90, 85, 88, 92)
+))
+visualizador <- VisualizadorDatos(df)
+graficar_diagramas_caja_caracteristicas(visualizador, estandarizado = TRUE)
+graficar_diagramas_caja_caracteristicas(visualizador, estandarizado = FALSE)
+```
+
+## 
